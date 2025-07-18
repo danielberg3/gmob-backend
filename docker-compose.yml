@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: gmob_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: gmob_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - gmob_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: gmob_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - gmob_network
+
+  adminer:
+    image: adminer
+    container_name: gmob_adminer
+    ports:
+      - "8080:8080"
+    networks:
+      - gmob_network
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  gmob_network:
+    driver: bridge
+

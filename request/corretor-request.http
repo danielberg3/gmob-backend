@@ -1,0 +1,84 @@
+### GMOB API - Exemplos de Requisições
+
+### Variáveis
+@baseUrl = http://localhost:3000/api
+@token = {{login.response.body.access_token}}
+
+### 1. Registrar novo corretor
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "nome_completo": "João Silva",
+  "email": "joao@email.com",
+  "telefone": "(11) 99999-9999",
+  "cpf": "123.456.789-00",
+  "senha": "senha123",
+  "perfil": "administrador"
+}
+
+### 2. Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@email.com",
+  "senha": "senha123"
+}
+
+### 3. Obter perfil do usuário logado
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{token}}
+
+### 4. Criar novo corretor (apenas admin)
+POST {{baseUrl}}/corretor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome_completo": "Maria Santos",
+  "email": "maria@email.com",
+  "telefone": "(11) 88888-8888",
+  "cpf": "987.654.321-00",
+  "senha": "senha456",
+  "perfil": "corretor"
+}
+
+### 5. Listar todos os corretores (apenas admin)
+GET {{baseUrl}}/corretor?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### 6. Buscar corretor por ID
+GET {{baseUrl}}/corretor/1
+Authorization: Bearer {{token}}
+
+### 7. Atualizar corretor
+PATCH {{baseUrl}}/corretor/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome_completo": "João Silva Atualizado",
+  "telefone": "(11) 77777-7777"
+}
+
+### 8. Remover corretor (apenas admin)
+DELETE {{baseUrl}}/corretor/2
+Authorization: Bearer {{token}}
+
+### 9. Logout
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{token}}
+
+### 10. Teste de rate limiting (executar múltiplas vezes)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@email.com",
+  "senha": "senha_errada"
+}
+
+###
+

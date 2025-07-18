@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Corretor {
+  corretor_id   Int        @id @default(autoincrement())
+  nome_completo String     @db.VarChar(255)
+  email         String     @unique @db.VarChar(255)
+  telefone      String     @db.VarChar(20)
+  cpf           String     @unique @db.VarChar(14)
+  senha         String     @db.VarChar(255)
+  data_cadastro DateTime   @default(now()) @db.Timestamp(6)
+  perfil        Perfil     @default(corretor)
+
+  imoveis_cadastrados  Imovel[]
+  clientes_cadastados Cliente[]
+  agendamentos         AgendamentoVisita[]
+
+  @@map("corretores")
+}
+
+enum Perfil {
+  corretor
+  administrador
+}
+
+model TipoImovel {
+  tipo_imovel_id Int    @id @default(autoincrement())
+  nome_tipo      String @unique @db.VarChar(50)
+
+  imoveis Imovel[]
+
+  @@map("tipos_imoveis")
+}
+
+model Imovel {
+  imovel_id      Int      @id @default(autoincrement())
+  corretor_id    Int
+  tipo_imovel_id Int
+  status         StatusImovel
+  estado         String   @db.VarChar(50)
+  cidade         String   @db.VarChar(100)
+  rua            String   @db.VarChar(255)
+  numero         String   @db.VarChar(20)
+  complemento    String?  @db.VarChar(100)
+  valor          Decimal  @db.Decimal(15, 2)
+  area           Decimal  @db.Decimal(10, 2)
+  numero_comodos Int
+  descricao      String?
+
+  data_cadastro DateTime @default(now()) @db.Timestamp(6)
+
+  corretor           Corretor            @relation(fields: [corretor_id], references: [corretor_id])
+  tipo_imovel        TipoImovel          @relation(fields: [tipo_imovel_id], references: [tipo_imovel_id])
+  agendamentos       AgendamentoVisita[]
+  transacoes_imoveis TransacaoImovel[]
+
+  @@unique([rua, numero, complemento])
+  @@map("imoveis")
+}
+
+enum StatusImovel {
+  disponivel
+  vendido
+  alugado
+}
+
+model Cliente {
+  cliente_id    Int          @id @default(autoincrement())
+  corretor_id   Int
+  nome          String       @db.VarChar(255)
+  cpf           String       @unique @db.VarChar(14)
+  email         String       @db.VarChar(255)
+  telefone      String       @db.VarChar(20)
+  tipo_interesse TipoInteresseCliente
+  arquivado     Boolean      @default(false)
+  data_cadastro DateTime     @default(now()) @db.Timestamp(6)
+
+  corretor             Corretor            @relation(fields: [corretor_id], references: [corretor_id])
+  agendamentos         AgendamentoVisita[]
+  transacoes_clientes TransacaoImovel[]
+
+  @@map("clientes")
+}
+
+enum TipoInteresseCliente {
+  compra
+  aluguel
+}
+
+model AgendamentoVisita {
+  agendamento_id  Int          @id @default(autoincrement())
+  corretor_id     Int
+  imovel_id       Int
+  cliente_id      Int
+  data_visita     DateTime     @db.Date
+  hora_inicio     DateTime     @db.Time(0)
+  hora_termino    DateTime     @db.Time(0)
+  observacoes     String?
+  status_agendamento StatusAgendamento @default(agendado)
+  data_agendamento DateTime     @default(now()) @db.Timestamp(6)
+
+  corretor Corretor @relation(fields: [corretor_id], references: [corretor_id])
+  imovel   Imovel   @relation(fields: [imovel_id], references: [imovel_id])
+  cliente  Cliente  @relation(fields: [cliente_id], references: [cliente_id])
+
+  @@unique([cliente_id, imovel_id, data_visita, hora_inicio])
+  @@map("agendamentos_visitas")
+}
+
+enum StatusAgendamento {
+  agendado
+  confirmado
+  cancelado
+  realizado
+}
+
+model TransacaoImovel {
+  transacao_id   Int          @id @default(autoincrement())
+  imovel_id      Int
+  cliente_id     Int
+  tipo_transacao TipoTransacao
+  data_transacao DateTime     @default(now()) @db.Timestamp(6)
+
+  imovel  Imovel  @relation(fields: [imovel_id], references: [imovel_id])
+  cliente Cliente @relation(fields: [cliente_id], references: [cliente_id])
+
+  @@unique([imovel_id, cliente_id, tipo_transacao])
+  @@map("transacoes_imoveis")
+}
+
+enum TipoTransacao {
+  venda
+  aluguel
+}

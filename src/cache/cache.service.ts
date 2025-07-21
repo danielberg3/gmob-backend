@@ -63,9 +63,10 @@ export class CacheService {
    * Armazena tentativas de login falhadas para implementar rate limiting
    */
   async setLoginAttempts(email: string, attempts: number, ttl: number = 900): Promise<void> {
-    const key = `login_attempts:${email}`;
-    await this.cacheManager.set(key, attempts, ttl);
-  }
+  const key = `login_attempts:${email}`;
+  await this.cacheManager.set(key, attempts, ttl);  
+}
+
 
   /**
    * Recupera número de tentativas de login

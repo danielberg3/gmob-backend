@@ -37,6 +37,9 @@ npx prisma migrate dev
 # Gerar cliente Prisma
 npx prisma generate
 
+# Inserir dados
+npm run prisma:seed
+
 # Iniciar aplicação
 npm run start:dev
 ```

@@ -1,0 +1,16 @@
+@baseUrl = http://localhost:3000/api
+@token = {{login.response.body.access_token}}
+
+### 1. Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@email.com",
+  "senha": "senha123"
+}
+
+### 2. Obter métricas de imóveis
+GET {{baseUrl}}/metricas
+Authorization: Bearer {{token}}

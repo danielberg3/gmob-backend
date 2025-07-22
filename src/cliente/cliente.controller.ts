@@ -1,7 +1,18 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  Get,
+  Query,
+  Param,
+  Patch,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ClienteService } from './cliente.service';
 import { CreateClienteDto } from './dto/create-cliente.dto';
+import { UpdateClienteDto } from './dto/update-cliente.dto';
 
 @Controller('clientes')
 @UseGuards(JwtAuthGuard)
@@ -13,31 +24,37 @@ export class ClienteController {
     return this.clienteService.create(createClienteDto, req.user);
   }
 
-  //   @Get()
-  //   findAll(
-  //     @Request() req,
-  //     @Query('page', ParseIntPipe) page: number = 1,
-  //     @Query('limit', ParseIntPipe) limit: number = 10,
-  //   ) {
-  //     return this.corretorService.findAll(req.user, page, limit);
-  //   }
+  @Get()
+  findAll(
+    @Request() req,
+    @Query('tipoInteresse') tipoInteresse: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.clienteService.findAll(
+      req.user,
+      tipoInteresse,
+      Number(page),
+      Number(limit),
+    );
+  }
 
-  //   @Get(':id')
-  //   findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
-  //     return this.corretorService.findOne(id, req.user);
-  //   }
+  @Get(':id')
+  findOne(@Param('id') id: string, @Request() req) {
+    return this.clienteService.findOne(Number(id), req.user);
+  }
 
-  //   @Patch(':id')
-  //   update(
-  //     @Param('id', ParseIntPipe) id: number,
-  //     @Body() updateCorretorDto: UpdateCorretorDto,
-  //     @Request() req,
-  //   ) {
-  //     return this.corretorService.update(id, updateCorretorDto, req.user);
-  //   }
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateClienteDto,
+    @Request() req,
+  ) {
+    return this.clienteService.update(Number(id), dto, req.user);
+  }
 
-  //   @Delete(':id')
-  //   remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
-  //     return this.corretorService.remove(id, req.user);
-  //   }
+  @Patch(':id/arquivar')
+  arquivar(@Param('id') id: string, @Request() req) {
+    return this.clienteService.arquivar(Number(id), req.user);
+  }
 }

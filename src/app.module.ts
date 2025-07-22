@@ -20,7 +20,7 @@ import { TiposImoveisModule } from './tipos-imoveis/tipos-imoveis.module';
     RedisCacheModule,
     AuthModule,
     CorretorModule,
-    MetricasModule
+    MetricasModule,
     imovelModule,
     TiposImoveisModule,
   ],

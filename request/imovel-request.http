@@ -152,26 +152,14 @@ Content-Type: application/json
 
 ###
 
-### ERRO 3: Tentar aceder a rota de admin sem ser admin
-# Esperado: Erro 403 (Forbidden) do RolesGuard.
-POST {{baseUrl}}/tipos-imoveis
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "nome_tipo": "Teste com token de corretor"
-}
-
-###
-
-### ERRO 4: Tentar aceder a rota protegida sem token
+### ERRO 3: Tentar aceder a rota protegida sem token
 # Esperado: Erro 401 (Unauthorized).
 GET {{baseUrl}}/auth/profile
 
 
 ###
 
-### ERRO 5: Criar imóvel com dados inválidos (DTO)
+### ERRO 4: Criar imóvel com dados inválidos (DTO)
 # Esperado: Erro 400 (Bad Request) do ValidationPipe.
 POST {{baseUrl}}/imoveis
 Authorization: Bearer {{token}}
@@ -185,16 +173,16 @@ Content-Type: application/json
 
 ###
 
-### ERRO 6: Tentar apagar um tipo de imóvel que está em uso
+### ERRO 5: Tentar apagar um tipo de imóvel que está em uso
 # Esperado: Erro 409 (Conflict) da nossa lógica de serviço personalizada.
-# O tipo_imovel_id 1 (Casa) foi usado na criação do imóvel válido no passo 6.
+
 DELETE {{baseUrl}}/tipos-imoveis/1
 Authorization: Bearer {{token}}
 
 
 ###
 
-### ERRO 7: Tentar encontrar um recurso que não existe
+### ERRO 6: Tentar encontrar um recurso que não existe
 # Esperado: Erro 404 (Not Found).
 GET {{baseUrl}}/imoveis/9999
 Authorization: Bearer {{token}}

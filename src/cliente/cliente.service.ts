@@ -14,7 +14,10 @@ export class ClienteService {
   async create(createClienteDto: CreateClienteDto, currentUser: any) {
     const corretorId = Number(currentUser.corretor_id);
 
-    if (currentUser.perfil !== 'corretor' && currentUser.perfil !== 'admin') {
+    if (
+      currentUser.perfil !== 'corretor' &&
+      currentUser.perfil !== 'administrador'
+    ) {
       throw new ForbiddenException(
         'Apenas corretores ou admins podem cadastrar clientes',
       );
@@ -65,6 +68,7 @@ export class ClienteService {
       where: {
         corretor_id: where.corretor_id,
         tipo_interesse: where.tipo_interesse,
+        arquivado: false,
       },
       skip: (page - 1) * limit,
       take: limit,

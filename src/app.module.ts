@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { CorretorModule } from './corretor/corretor.module';
 import { RedisCacheModule } from './cache/cache.module';
+import { ClienteModule } from './cliente/cliente.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { RedisCacheModule } from './cache/cache.module';
     RedisCacheModule,
     AuthModule,
     CorretorModule,
+    ClienteModule,
   ],
   controllers: [AppController],
   providers: [

@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { CorretorModule } from './corretor/corretor.module';
 import { RedisCacheModule } from './cache/cache.module';
+import { MetricasModule } from './metricas/metricas.module';
 import { imovelModule } from './imovel/imovel.module';
 import { TiposImoveisModule } from './tipos-imoveis/tipos-imoveis.module';
 
@@ -19,6 +20,7 @@ import { TiposImoveisModule } from './tipos-imoveis/tipos-imoveis.module';
     RedisCacheModule,
     AuthModule,
     CorretorModule,
+    MetricasModule
     imovelModule,
     TiposImoveisModule,
   ],

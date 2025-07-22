@@ -27,7 +27,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // Verifica se o token ainda está válido no cache Redis
     const cachedToken = await this.cacheService.getToken(payload.sub);
     if (!cachedToken) {
-      throw new UnauthorizedException('Token inválido ou expirado');
+      return {
+        message: 'Logout realizado com sucesso',
+      };
     }
 
     // Busca o usuário no banco de dados

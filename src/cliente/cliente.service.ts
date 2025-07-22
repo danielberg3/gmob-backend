@@ -146,4 +146,18 @@ export class ClienteService {
       data: { arquivado: true },
     });
   }
+
+  async findByCpf(cpf: string) {
+    const cliente = await this.prismaService.cliente.findFirst({
+      where: {
+        cpf
+      },
+    });
+
+    if (!cliente) {
+      throw new NotFoundException('Cliente não encontrado com o CPF fornecido.');
+    }
+
+    return cliente;
+  }
 }

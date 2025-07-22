@@ -1,0 +1,188 @@
+### GMOB API - Requisições para Imóveis
+
+
+@baseUrl = http://localhost:3000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+@baseUrl = http://localhost:3000/api
+@token = {{login.response.body.access_token}}
+
+### =================== AUTH & CORRETOR ===================
+
+### 1. Registrar novo corretor (Admin)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "nome_completo": "João Silva",
+  "email": "joao@email.com",
+  "telefone": "(11) 99999-9999",
+  "cpf": "123.456.789-00",
+  "senha": "senha123",
+  "perfil": "administrador"
+}
+
+### 2. Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@email.com",
+  "senha": "senha123"
+}
+
+### =================== CRUD Imóvel ===================
+
+### 1. Criar novo imóvel
+# Requer autenticação de Corretor ou Administrador.
+# O corretor_id é associado automaticamente com base no token.
+# O tipo_imovel_id deve corresponder a um tipo existente (ex: 1 para 'Casa').
+POST {{baseUrl}}/imoveis
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_imovel_id": 1,
+  "status": "disponivel",
+  "estado": "São Paulo",
+  "cidade": "São Paulo",
+  "rua": "Avenida Faria Lima",
+  "numero": "1000",
+  "complemento": "Andar 5, Sala 502",
+  "valor": 1250000.00,
+  "area": 120.0,
+  "numero_comodos": 4,
+  "descricao": "Escritório comercial moderno em localização privilegiada."
+}
+
+###
+
+POST {{baseUrl}}/imoveis
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_imovel_id": 4,
+  "status": "alugado",
+  "estado": "Alagoas",
+  "cidade": "Maceió",
+  "rua": "Avenida Lima",
+  "numero": "200",
+  "complemento": "Quadra B, Numero 11",
+  "valor": 125.000,
+  "area": 100.0,
+  "numero_comodos": 2,
+  "descricao": "Casa moderna."
+}
+
+
+### 2. Listar imóveis com filtros e paginação
+# Rota pública, mas o resultado muda se o usuário for um corretor (mostra apenas os seus).
+# Teste diferentes combinações de filtros.
+GET {{baseUrl}}/imoveis?page=1&limit=10&cidade=São Paulo&status=disponivel&valorMax=1500000
+Authorization: Bearer {{token}}
+
+
+###
+
+### 3. Obter detalhes de um imóvel específico
+# Altere o '1' para um ID de imóvel existente.
+# Requer autenticação do corretor dono ou de um administrador.
+GET {{baseUrl}}/imoveis/7
+Authorization: Bearer {{token}}
+
+
+###
+
+### 4. Atualizar um imóvel existente
+# Altere o '1' para um ID de imóvel existente.
+# Requer autenticação do corretor dono ou de um administrador.
+PATCH {{baseUrl}}/imoveis/5
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "valor": 1300000.00,
+  "descricao": "Escritório com vista panorâmica e recém-reformado."
+}
+
+
+###
+
+### 5. Remover um imóvel
+# Altere o '1' para um ID de imóvel existente.
+# Requer autenticação do corretor dono ou de um administrador.
+DELETE {{baseUrl}}/imoveis/5
+Authorization: Bearer {{token}}
+
+###
+### =================== TESTES DE TRATAMENTO DE ERROS ===================
+###
+
+### ERRO 1: Criar imóvel com tipo_imovel_id inválido
+# Esperado: Erro 400 (Bad Request) por violação de chave estrangeira (P2003).
+POST {{baseUrl}}/imoveis
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_imovel_id": 999,
+  "status": "disponivel",
+  "estado": "Estado de Erro",
+  "cidade": "Cidade de Erro",
+  "rua": "Rua do Erro",
+  "numero": "999",
+  "valor": 100,
+  "area": 10,
+  "numero_comodos": 1
+}
+
+###
+
+### ERRO 2: Criar tipo de imóvel com nome duplicado
+# Esperado: Erro 409 (Conflict) por violação de campo único (P2002).
+POST {{baseUrl}}/tipos-imoveis
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome_tipo": "Casa"
+}
+
+###
+
+### ERRO 3: Tentar aceder a rota protegida sem token
+# Esperado: Erro 401 (Unauthorized).
+GET {{baseUrl}}/auth/profile
+
+
+###
+
+### ERRO 4: Criar imóvel com dados inválidos (DTO)
+# Esperado: Erro 400 (Bad Request) do ValidationPipe.
+POST {{baseUrl}}/imoveis
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipo_imovel_id": "isto-nao-e-um-numero",
+  "status": "disponivel",
+  "cidade": "São Paulo"
+}
+
+###
+
+### ERRO 5: Tentar apagar um tipo de imóvel que está em uso
+# Esperado: Erro 409 (Conflict) da nossa lógica de serviço personalizada.
+
+DELETE {{baseUrl}}/tipos-imoveis/1
+Authorization: Bearer {{token}}
+
+
+###
+
+### ERRO 6: Tentar encontrar um recurso que não existe
+# Esperado: Erro 404 (Not Found).
+GET {{baseUrl}}/imoveis/9999
+Authorization: Bearer {{token}}

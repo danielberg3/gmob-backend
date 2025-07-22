@@ -1,0 +1,77 @@
+### GMOB API - Exemplos de Requisições
+
+@baseUrl = http://localhost:3000/api
+@token = {{login.response.body.access_token}}
+
+### =================== AUTH & CORRETOR ===================
+
+### 1. Registrar novo corretor (Admin)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "nome_completo": "João Silva",
+  "email": "joao@email.com",
+  "telefone": "(11) 99999-9999",
+  "cpf": "123.456.789-00",
+  "senha": "senha123",
+  "perfil": "administrador"
+}
+
+### 2. Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@email.com",
+  "senha": "senha123"
+}
+
+
+### =================== TIPOS DE IMÓVEIS ===================
+
+### 11. Criar novo tipo de imóvel (apenas admin)
+# Esta requisição requer um token de um usuário com perfil 'administrador'.
+POST {{baseUrl}}/tipos-imoveis
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome_tipo": "Casa"
+}
+
+###
+
+POST {{baseUrl}}/tipos-imoveis
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome_tipo": "Apartamento"
+}
+
+### 12. Listar todos os tipos de imóveis (público)
+# Esta rota não precisa de autenticação.
+GET {{baseUrl}}/tipos-imoveis
+
+
+### 13. Atualizar tipo de imóvel (apenas admin)
+# Altere o '1' para um ID de tipo de imóvel existente.
+# Requer token de administrador.
+PATCH {{baseUrl}}/tipos-imoveis/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome_tipo": "terreno"
+}
+
+
+### 14. Remover tipo de imóvel (apenas admin)
+# Altere o '3' para um ID de tipo de imóvel que você queira remover.
+# Requer token de administrador.
+# Nota: Esta requisição falhará se houver algum imóvel vinculado a este tipo.
+DELETE {{baseUrl}}/tipos-imoveis/3
+Authorization: Bearer {{token}}
+

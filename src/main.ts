@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { PrismaClientExceptionFilter } from './prisma/filters/prisma-client-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,6 +24,8 @@ async function bootstrap() {
 
   // Prefixo global para todas as rotas
   app.setGlobalPrefix('api');
+
+  app.useGlobalFilters(new PrismaClientExceptionFilter());
 
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');

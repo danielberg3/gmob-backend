@@ -1,0 +1,48 @@
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, Optional } from '@nestjs/common';
+import { ImovelService } from './imovel.service';
+import { CreateImovelDto } from './dto/create-imovel.dto';
+import { UpdateImovelDto } from './dto/update-imovel.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Perfil } from '@prisma/client';
+
+@Controller('imoveis')
+export class imovelController {
+  constructor(private readonly imovelService: ImovelService) {}
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Perfil.corretor, Perfil.administrador)
+  create(@Body() createImovelDto: CreateImovelDto,  @Req() req) {
+    return this.imovelService.create(createImovelDto, req.user);
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard) 
+  @Optional() 
+  findAll(@Req() req, @Query() queryParams: any) {
+    return this.imovelService.findAll(req.user, queryParams);
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @Optional()
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.imovelService.findOne(id, req.user);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Perfil.corretor, Perfil.administrador) 
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateImovelDto: UpdateImovelDto, @Req() req) {
+    return this.imovelService.update(id, updateImovelDto, req.user);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Perfil.corretor, Perfil.administrador) 
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.imovelService.remove(id, req.user);
+  }
+}

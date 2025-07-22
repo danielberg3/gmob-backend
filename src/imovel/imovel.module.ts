@@ -8,5 +8,6 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   imports: [PrismaModule],
   controllers: [imovelController],
   providers: [ImovelService],
+  exports: [ImovelService],
 })
 export class imovelModule {}

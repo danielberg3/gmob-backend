@@ -11,6 +11,7 @@ import { ClienteModule } from './cliente/cliente.module';
 import { MetricasModule } from './metricas/metricas.module';
 import { imovelModule } from './imovel/imovel.module';
 import { TiposImoveisModule } from './tipos-imoveis/tipos-imoveis.module';
+import { TransacoesModule } from './transacoes/transacoes.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TiposImoveisModule } from './tipos-imoveis/tipos-imoveis.module';
     MetricasModule,
     imovelModule,
     TiposImoveisModule,
+    TransacoesModule,
   ],
   controllers: [AppController],
   providers: [

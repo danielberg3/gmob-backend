@@ -55,4 +55,47 @@ export class TransacoesService {
         return transacao;
     }
 
+    async findAll(currentUser: any) {
+        const transacoes = await this.prismaService.transacaoImovel.findMany({
+            where: {
+                corretor_id: currentUser.corretor_id,
+            },
+            select: {
+                transacao_id: true, 
+                imovel_id: true,
+                cliente_id: true,
+            },
+        });
+
+        return Promise.all(transacoes.map(async transacao => ({
+            transacao_id: transacao.transacao_id,
+            imovel: await this.imovelService.findOne(transacao.imovel_id, currentUser),
+            cliente: await this.clienteService.findOne(transacao.cliente_id, currentUser),
+        })));
+    }
+    
+    async remove(id: number, currentUser: any) {
+        const transacao = await this.prismaService.transacaoImovel.findUnique({
+            where: { transacao_id: id },
+            select: {
+                corretor_id: true,
+            },
+
+        });
+
+        if (!transacao) {
+            throw new BadRequestException('Transação não encontrada');
+        }
+
+        if (transacao.corretor_id !== currentUser.corretor_id) {
+            throw new UnauthorizedException('Você não tem permissão para remover esta transação'); 
+        }
+
+        await this.prismaService.transacaoImovel.delete({
+            where: { transacao_id: id },
+        });
+
+        return { message: 'Transação removida com sucesso' };
+    }
+
 }

@@ -25,3 +25,13 @@ Content-Type: application/json
   "cpf": "111.222.333-44",
   "tipo_transacao": "venda"
 }
+
+### 3. Listar transações
+GET {{baseUrl}}/transacoes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 4. Deletar transação
+DELETE {{baseUrl}}/transacoes/1
+Authorization: Bearer {{token}}
+Content-Type: application/json

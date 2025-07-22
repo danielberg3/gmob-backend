@@ -1,0 +1,52 @@
+@baseUrl = http://localhost:3000/api
+@token = {{login.response.body.access_token}}
+
+### 1. Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@email.com",
+  "senha": "senha123"
+}
+
+
+### 2. Criar Novo Cliente
+POST {{baseUrl}}/clientes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome_completo": "Ana Beatriz Lima",
+  "email": "ana.beatriz@example.com",
+  "telefone": "(82) 91234-5678",
+  "cpf": "111.222.333-44",
+  "tipo_interesse": "aluguel"
+}
+
+### 3. Obter clientes com parâmetros
+GET {{baseUrl}}/clientes?tipoInteresse=compra&page=1&limit=15
+Authorization: Bearer {{token}}
+
+### 4. Obter Clientes
+GET {{baseUrl}}/clientes
+Authorization: Bearer {{token}}
+
+### 5. Obter cliente especifico
+GET {{baseUrl}}/clientes/3
+Authorization: Bearer {{token}}
+
+### 6. Atualizar cliente
+PATCH {{baseUrl}}/clientes/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "telefone": "(82) 98877-6655",
+  "tipo_interesse": "compra"
+}
+
+### 7. Arquivar cliente
+PATCH {{baseUrl}}/clientes/1/arquivar
+Authorization: Bearer {{token}}

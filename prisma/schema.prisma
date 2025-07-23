@@ -109,7 +109,7 @@ model AgendamentoVisita {
   imovel   Imovel   @relation(fields: [imovel_id], references: [imovel_id])
   cliente  Cliente  @relation(fields: [cliente_id], references: [cliente_id])
 
-  @@unique([cliente_id, imovel_id, data_visita, hora_inicio])
+  @@unique([imovel_id, data_visita])
   @@map("agendamentos_visitas")
 }
 

@@ -64,16 +64,35 @@ export class ClienteService {
       where.tipo_interesse = tipoInteresse;
     }
 
-    return this.prismaService.cliente.findMany({
-      where: {
-        corretor_id: where.corretor_id,
-        tipo_interesse: where.tipo_interesse,
-        arquivado: false,
+    const [clientes, total] = await Promise.all([
+      this.prismaService.cliente.findMany({
+        where: {
+          corretor_id: where.corretor_id,
+          tipo_interesse: where.tipo_interesse,
+          arquivado: false,
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { data_cadastro: 'desc' },
+      }),
+      this.prismaService.cliente.count({
+        where: {
+          corretor_id: where.corretor_id,
+          tipo_interesse: where.tipo_interesse,
+          arquivado: false,
+        },
+      }),
+    ]);
+
+    return {
+      clientes,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { data_cadastro: 'desc' },
-    });
+    };
   }
 
   async findOne(id: number, user: any) {
@@ -84,7 +103,7 @@ export class ClienteService {
     if (!cliente) throw new NotFoundException('Cliente não encontrado');
 
     const isOwner = cliente.corretor_id === Number(user.corretor_id);
-    const isAdmin = user.perfil === 'admin';
+    const isAdmin = user.perfil === 'administrador';
 
     if (!isOwner && !isAdmin) {
       throw new ForbiddenException('Acesso negado ao cliente');
@@ -101,7 +120,7 @@ export class ClienteService {
     if (!cliente) throw new NotFoundException('Cliente não encontrado');
 
     const isOwner = cliente.corretor_id === Number(user.corretor_id);
-    const isAdmin = user.perfil === 'admin';
+    const isAdmin = user.perfil === 'administrador';
 
     if (!isOwner && !isAdmin) {
       throw new ForbiddenException('Você não pode atualizar este cliente');
@@ -139,7 +158,7 @@ export class ClienteService {
     if (!cliente) throw new NotFoundException('Cliente não encontrado');
 
     const isOwner = cliente.corretor_id === Number(user.corretor_id);
-    const isAdmin = user.perfil === 'admin';
+    const isAdmin = user.perfil === 'administrador';
 
     if (!isOwner && !isAdmin) {
       throw new ForbiddenException('Você não pode arquivar este cliente');
@@ -149,5 +168,21 @@ export class ClienteService {
       where: { cliente_id: id },
       data: { arquivado: true },
     });
+  }
+
+  async findByCpf(cpf: string) {
+    const cliente = await this.prismaService.cliente.findFirst({
+      where: {
+        cpf,
+      },
+    });
+
+    if (!cliente) {
+      throw new NotFoundException(
+        'Cliente não encontrado com o CPF fornecido.',
+      );
+    }
+
+    return cliente;
   }
 }

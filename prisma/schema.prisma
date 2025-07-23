@@ -20,6 +20,7 @@ model Corretor {
   imoveis_cadastrados  Imovel[]
   clientes_cadastados Cliente[]
   agendamentos         AgendamentoVisita[]
+  transacoes_imoveis TransacaoImovel[]
 
   @@map("corretores")
 }
@@ -124,11 +125,13 @@ model TransacaoImovel {
   transacao_id   Int          @id @default(autoincrement())
   imovel_id      Int
   cliente_id     Int
+  corretor_id     Int
   tipo_transacao TipoTransacao
   data_transacao DateTime     @default(now()) @db.Timestamp(6)
 
   imovel  Imovel  @relation(fields: [imovel_id], references: [imovel_id])
   cliente Cliente @relation(fields: [cliente_id], references: [cliente_id])
+  corretor Corretor @relation(fields: [corretor_id], references: [corretor_id])
 
   @@unique([imovel_id, cliente_id, tipo_transacao])
   @@map("transacoes_imoveis")

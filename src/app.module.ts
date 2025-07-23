@@ -12,6 +12,7 @@ import { MetricasModule } from './metricas/metricas.module';
 import { imovelModule } from './imovel/imovel.module';
 import { TiposImoveisModule } from './tipos-imoveis/tipos-imoveis.module';
 import { AgendamentosModule } from './agendamentos/agendamentos.module';
+import { TransacoesModule } from './transacoes/transacoes.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AgendamentosModule } from './agendamentos/agendamentos.module';
     imovelModule,
     TiposImoveisModule,
     AgendamentosModule,
+    TransacoesModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,0 +1,37 @@
+### GMOB API - Exemplos de Requisições
+
+### Variáveis
+@baseUrl = http://localhost:3000/api
+@token = {{login.response.body.access_token}}
+
+
+### 1. Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@email.com",
+  "senha": "senha123"
+}
+
+### 2. Registrar nova transação
+POST {{baseUrl}}/transacoes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "imovel_id": 4,
+  "cpf": "111.222.333-44",
+  "tipo_transacao": "venda"
+}
+
+### 3. Listar transações
+GET {{baseUrl}}/transacoes?page=1&limit=10
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 4. Deletar transação
+DELETE {{baseUrl}}/transacoes/1
+Authorization: Bearer {{token}}
+Content-Type: application/json

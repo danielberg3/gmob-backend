@@ -48,5 +48,5 @@ Content-Type: application/json
 }
 
 ### 7. Arquivar cliente
-PATCH {{baseUrl}}/clientes/1/arquivar
+PATCH {{baseUrl}}/clientes/7/arquivar
 Authorization: Bearer {{token}}

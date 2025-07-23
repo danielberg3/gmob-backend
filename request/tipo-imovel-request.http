@@ -74,4 +74,3 @@ Content-Type: application/json
 # Nota: Esta requisição falhará se houver algum imóvel vinculado a este tipo.
 DELETE {{baseUrl}}/tipos-imoveis/3
 Authorization: Bearer {{token}}
-

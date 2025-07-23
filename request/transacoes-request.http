@@ -27,7 +27,7 @@ Content-Type: application/json
 }
 
 ### 3. Listar transações
-GET {{baseUrl}}/transacoes
+GET {{baseUrl}}/transacoes?page=1&limit=10
 Authorization: Bearer {{token}}
 Content-Type: application/json
 

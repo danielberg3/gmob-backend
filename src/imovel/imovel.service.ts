@@ -37,7 +37,7 @@ export class ImovelService {
   async findAll(user: any, queryParams: any) {
     const {
       page = 1,
-      limit = 10,
+      limit = 5,
       tipo,
       estado,
       cidade,

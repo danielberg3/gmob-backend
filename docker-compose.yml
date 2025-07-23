@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: gmob_db
     ports:
-      - "5432:5432"
+      - "5432:5435"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:

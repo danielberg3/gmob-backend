@@ -11,6 +11,7 @@ import { ClienteModule } from './cliente/cliente.module';
 import { MetricasModule } from './metricas/metricas.module';
 import { imovelModule } from './imovel/imovel.module';
 import { TiposImoveisModule } from './tipos-imoveis/tipos-imoveis.module';
+import { AgendamentosModule } from './agendamentos/agendamentos.module';
 
 @Module({
   imports: [
@@ -20,11 +21,12 @@ import { TiposImoveisModule } from './tipos-imoveis/tipos-imoveis.module';
     PrismaModule,
     RedisCacheModule,
     AuthModule,
-    CorretorModule,
     ClienteModule,
+    CorretorModule,
     MetricasModule,
     imovelModule,
     TiposImoveisModule,
+    AgendamentosModule,
   ],
   controllers: [AppController],
   providers: [

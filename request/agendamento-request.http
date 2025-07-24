@@ -1,0 +1,60 @@
+### GMOB API - Exemplos de Requisições
+
+### Variáveis
+@baseUrl = http://localhost:3000/api
+@token = {{login.response.body.access_token}}
+# Execute the login request first (Ctrl+Alt+R or "Send Request" on the login block) to set the token variable for subsequent requests.
+
+### 1. Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@email.com",
+  "senha": "senha123"
+}
+
+### 2. Criar Agendamento
+# @name createAgendamento
+POST {{baseUrl}}/agendamentos
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "imovel_id": 1,
+  "cliente_id": 1,
+  "data_visita": "2025-08-15",
+  "hora_inicio": "10:00",
+  "hora_termino": "11:00",
+  "observacoes": "Visita para cliente interessado em apartamento com 2 quartos."
+}
+
+
+### 3. Listar Agendamentos (Sem filtros, paginação padrão)
+# @name listAgendamentosDefault
+GET {{baseUrl}}/agendamentos?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### 4. Listar Agendamentos (Filtrando por imovelId e status PENDENTE)
+# @name listAgendamentosFilteredByImovelAndStatus
+GET {{baseUrl}}/agendamentos?imovelId=1&page=1&limit=5
+Authorization: Bearer {{token}}
+
+### 5. Listar Agendamentos (Filtrando por clienteId e data)
+# @name listAgendamentosFilteredByClientAndDate
+GET {{baseUrl}}/agendamentos?clienteId=201&data=2025-08-15
+Authorization: Bearer {{token}}
+
+### 6. Buscar Agendamento por ID
+# @name getAgendamentoById
+GET {{baseUrl}}/agendamentos/1
+Authorization: Bearer {{token}}
+# Substitua '1' pelo ID de um agendamento existente.
+
+# Substitua '1' pelo ID do agendamento a ser atualizado.
+
+### 7. Remover Agendamento
+# @name deleteAgendamento
+DELETE {{baseUrl}}/agendamentos/1
+Authorization: Bearer {{token}}

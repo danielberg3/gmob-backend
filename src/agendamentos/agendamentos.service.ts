@@ -35,7 +35,7 @@ export class AgendamentosService {
 
       const corretorId = Number(currentUser.corretor_id);
 
-      if (currentUser.perfil !== 'corretor') {
+      if (currentUser.perfil !== 'corretor' && currentUser.perfil !== 'administrador') {
         throw new ForbiddenException(
           'Apenas corretores podem cadastrar agendamentos',
         );

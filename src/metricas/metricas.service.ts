@@ -41,6 +41,7 @@ export class MetricasService {
         totalClientes = await this.prismaService.cliente.count({
             where: {
                 corretor_id: user.corretor_id,  
+                arquivado: false,
             },
         })
 
@@ -95,7 +96,11 @@ export class MetricasService {
             }
         }
 
-        totalClientes = await this.prismaService.cliente.count()
+        totalClientes = await this.prismaService.cliente.count({
+            where: {
+                arquivado: false,
+            }
+        })
 
         totalTransacoes = await this.prismaService.transacaoImovel.count();
 

@@ -3,6 +3,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -167,5 +168,40 @@ export class TransacoesService {
     });
 
     return { message: 'Transação removida com sucesso' };
+  }
+
+  async findOne(id: number, currentUser: any) {
+    const transacao = await this.prismaService.transacaoImovel.findUnique({
+      where: { transacao_id: id },
+      select: {
+        transacao_id: true,
+        imovel_id: true,
+        cliente_id: true,
+        corretor_id: true,
+        tipo_transacao: true,
+        data_transacao: true,
+      },
+    });
+
+    if (!transacao) {
+      throw new NotFoundException(`Transação com ID ${id} não encontrada.`);
+    }
+
+    if (transacao.corretor_id !== currentUser.corretor_id && currentUser.perfil !== 'administrador') {
+        throw new UnauthorizedException('Você não tem permissão para visualizar esta transação.');
+    }
+
+    const [imovelDetalhes, clienteDetalhes] = await Promise.all([
+      this.imovelService.findOne(transacao.imovel_id, currentUser),
+      this.clienteService.findOne(transacao.cliente_id, currentUser),
+    ]);
+
+    return {
+      transacao_id: transacao.transacao_id,
+      tipo_transacao: transacao.tipo_transacao,
+      data_transacao: transacao.data_transacao,
+      imovel: imovelDetalhes,
+      cliente: clienteDetalhes,
+    };
   }
 }

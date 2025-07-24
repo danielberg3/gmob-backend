@@ -38,4 +38,9 @@ export class TransacoesController {
   remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
     return this.transacoesService.remove(id, req.user);
   }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.transacoesService.findOne(id, req.user);
+  }
 }

@@ -35,3 +35,8 @@ Content-Type: application/json
 DELETE {{baseUrl}}/transacoes/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
+
+### 5. Obter detalhes de uma transação específica
+GET {{baseUrl}}/transacoes/1
+Authorization: Bearer {{token}}
+Content-Type: application/json

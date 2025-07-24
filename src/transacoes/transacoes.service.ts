@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -13,6 +15,7 @@ import { UpdateImovelDto } from 'src/imovel/dto/update-imovel.dto';
 export class TransacoesService {
   constructor(
     private prismaService: PrismaService,
+    @Inject(forwardRef(() => ImovelService))
     private imovelService: ImovelService,
     private clienteService: ClienteService,
   ) {}
@@ -119,6 +122,7 @@ export class TransacoesService {
       where: { transacao_id: id },
       select: {
         corretor_id: true,
+        imovel_id: true,
       },
     });
 
@@ -134,6 +138,32 @@ export class TransacoesService {
 
     await this.prismaService.transacaoImovel.delete({
       where: { transacao_id: id },
+    });
+
+    await this.imovelService.update(
+      transacao.imovel_id,
+      { status: 'disponivel' } as UpdateImovelDto,
+      currentUser,
+    );
+
+    return { message: 'Transação removida com sucesso' };
+  }
+
+    async removeByImovelId(id: number, currentUser: any) {
+    const transacoes = await this.prismaService.transacaoImovel.findMany({
+      where: { imovel_id: id },
+      select: {
+        corretor_id: true,
+        transacao_id: true,
+      },
+    });
+
+    if (transacoes.length === 0) {
+      return;
+    }
+
+    await this.prismaService.transacaoImovel.deleteMany({
+      where: { imovel_id: id },
     });
 
     return { message: 'Transação removida com sucesso' };

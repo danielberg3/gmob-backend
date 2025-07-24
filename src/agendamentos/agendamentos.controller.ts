@@ -70,7 +70,7 @@ export class AgendamentosController {
 
   @Delete(':id')
   @Roles('corretor', 'administrador')
-  cancel(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    return this.service.cancel(id, req.user);
+  remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.service.remove(id, req.user);
   }
 }

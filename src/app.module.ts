@@ -9,7 +9,7 @@ import { CorretorModule } from './corretor/corretor.module';
 import { RedisCacheModule } from './cache/cache.module';
 import { ClienteModule } from './cliente/cliente.module';
 import { MetricasModule } from './metricas/metricas.module';
-import { imovelModule } from './imovel/imovel.module';
+import { ImovelModule } from './imovel/imovel.module';
 import { TiposImoveisModule } from './tipos-imoveis/tipos-imoveis.module';
 import { AgendamentosModule } from './agendamentos/agendamentos.module';
 import { TransacoesModule } from './transacoes/transacoes.module';
@@ -25,7 +25,7 @@ import { TransacoesModule } from './transacoes/transacoes.module';
     ClienteModule,
     CorretorModule,
     MetricasModule,
-    imovelModule,
+    ImovelModule,
     TiposImoveisModule,
     AgendamentosModule,
     TransacoesModule,

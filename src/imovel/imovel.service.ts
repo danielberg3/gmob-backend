@@ -3,15 +3,24 @@ import {
   NotFoundException,
   ForbiddenException,
   ConflictException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateImovelDto } from './dto/create-imovel.dto';
 import { UpdateImovelDto } from './dto/update-imovel.dto';
 import { Imovel, Perfil } from '@prisma/client';
+import { TransacoesService } from 'src/transacoes/transacoes.service';
+import { AgendamentosService } from 'src/agendamentos/agendamentos.service';
 
 @Injectable()
 export class ImovelService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => TransacoesService))
+    private transacaoService: TransacoesService,
+    private agendamentoService: AgendamentosService,
+  ) {}
 
   async create(createImovelDto: CreateImovelDto, user: any): Promise<Imovel> {
     const { rua, numero, complemento, cidade, estado } = createImovelDto;
@@ -121,8 +130,11 @@ export class ImovelService {
   }
 
   async remove(id: number, user: any): Promise<Imovel> {
-    await this.findOne(id, user); 
+    await this.findOne(id, user);
 
+    this.transacaoService.removeByImovelId(id, user);
+    this.agendamentoService.removeByImovelId(id, user);
+    
     return this.prisma.imovel.delete({ where: { imovel_id: id } });
   }
 }

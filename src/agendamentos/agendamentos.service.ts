@@ -278,4 +278,46 @@ export class AgendamentosService {
       throw new Error('Erro ao cancelar agendamento');
     }
   }
+
+  async remove(id: number, user: currentUser): Promise<AgendamentoVisita> {
+    try {
+      if (user.perfil !== 'corretor' && user.perfil !== 'administrador') {
+        throw new ForbiddenException('Acesso negado');
+      }
+
+      const agendamento = await this.prisma.agendamentoVisita.findUnique({
+        where: { agendamento_id: id },
+      });
+
+      if (!agendamento) {
+        throw new NotFoundException('Agendamento não encontrado');
+      }
+
+      const removido = await this.prisma.agendamentoVisita.delete({
+        where: { agendamento_id: id },
+      });
+
+      return removido;
+    } catch (error) {
+      if (error instanceof ForbiddenException) throw error;
+      throw new Error('Erro ao remover agendamento');
+    }
+  }
+  async removeByImovelId(imovelId: number, user: currentUser): Promise<void> {
+    if (user.perfil !== 'corretor' && user.perfil !== 'administrador') {
+      throw new ForbiddenException('Acesso negado');
+    }
+
+    const agendamentos = await this.prisma.agendamentoVisita.findMany({
+      where: { imovel_id: imovelId },
+    });
+
+    if (agendamentos.length === 0) {
+      return;
+    }
+
+    await this.prisma.agendamentoVisita.deleteMany({
+      where: { imovel_id: imovelId },
+    });
+  }
 }

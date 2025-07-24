@@ -8,7 +8,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Perfil } from '@prisma/client';
 
 @Controller('imoveis')
-export class imovelController {
+export class ImovelController {
   constructor(private readonly imovelService: ImovelService) {}
 
   @Post()

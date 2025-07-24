@@ -1,16 +1,14 @@
-import { Module } from "@nestjs/common";
-import { imovelController } from "src/imovel/imovel.controller";
-import { ImovelService } from "src/imovel/imovel.service";
+import { forwardRef, Module } from "@nestjs/common";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { TransacoesController } from "./transacoes.controller";
 import { TransacoesService } from "./transacoes.service";
-import { ClienteService } from "src/cliente/cliente.service";
-import { imovelModule } from "src/imovel/imovel.module";
+import { ImovelModule } from "src/imovel/imovel.module";
 import { ClienteModule } from "src/cliente/cliente.module";
 
 @Module({
-    imports: [PrismaModule, imovelModule, ClienteModule],
+    imports: [PrismaModule, forwardRef(() => ImovelModule), ClienteModule],
     controllers: [TransacoesController],
     providers: [TransacoesService],
+    exports: [TransacoesService],
 })
 export class TransacoesModule {}

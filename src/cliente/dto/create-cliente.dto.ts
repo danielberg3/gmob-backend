@@ -6,7 +6,7 @@ import {
   Matches,
 } from 'class-validator';
 
-enum TIPO_INTERESSE {
+export enum TIPO_INTERESSE {
   COMPRA = 'compra',
   ALUGUEL = 'aluguel',
 }

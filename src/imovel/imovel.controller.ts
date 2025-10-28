@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, Optional } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseIntPipe, Optional, UseInterceptors, UploadedFiles } from '@nestjs/common';
 import { ImovelService } from './imovel.service';
 import { CreateImovelDto } from './dto/create-imovel.dto';
 import { UpdateImovelDto } from './dto/update-imovel.dto';
@@ -6,6 +6,8 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Perfil } from '@prisma/client';
+import { FilesInterceptor } from '@nestjs/platform-express';
+
 
 @Controller('imoveis')
 export class ImovelController {
@@ -16,6 +18,18 @@ export class ImovelController {
   @Roles(Perfil.corretor, Perfil.administrador)
   create(@Body() createImovelDto: CreateImovelDto,  @Req() req) {
     return this.imovelService.create(createImovelDto, req.user);
+  }
+
+  @Post(':id/imagens')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Perfil.corretor, Perfil.administrador)
+  @UseInterceptors(FilesInterceptor('files', 10)) 
+  async uploadImagens(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Req() req,
+  ) {
+    return this.imovelService.uploadImagens(id, files, req.user);
   }
 
   @Get()

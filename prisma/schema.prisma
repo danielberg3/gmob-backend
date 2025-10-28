@@ -44,6 +44,8 @@ model Imovel {
   corretor_id    Int
   tipo_imovel_id Int
   status         StatusImovel
+  valor_aluguel  Decimal?       @db.Decimal(15, 2) 
+  disponibilidade Disponibilidade @default(ambos)
   estado         String   @db.VarChar(50)
   cidade         String   @db.VarChar(100)
   rua            String   @db.VarChar(255)
@@ -60,6 +62,8 @@ model Imovel {
   tipo_imovel        TipoImovel          @relation(fields: [tipo_imovel_id], references: [tipo_imovel_id])
   agendamentos       AgendamentoVisita[]
   transacoes_imoveis TransacaoImovel[]
+
+  imagens            ImagemImovel[]
 
   @@unique([rua, numero, complemento])
   @@map("imoveis")
@@ -140,4 +144,20 @@ model TransacaoImovel {
 enum TipoTransacao {
   venda
   aluguel
+}
+
+enum Disponibilidade {
+  venda
+  aluguel
+  ambos
+}
+
+model ImagemImovel {
+  imagem_id Int    @id @default(autoincrement())
+  url       String // URL da imagem (do S3 ou storage local)
+  imovel_id Int
+
+  imovel Imovel @relation(fields: [imovel_id], references: [imovel_id])
+
+  @@map("imagens_imoveis")
 }

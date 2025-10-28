@@ -6,11 +6,11 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateTransacoesDto } from './dto/create-transacoes.dto';
-import { ImovelService } from 'src/imovel/imovel.service';
-import { ClienteService } from 'src/cliente/cliente.service';
-import { UpdateImovelDto } from 'src/imovel/dto/update-imovel.dto';
+import { ImovelService } from '../imovel/imovel.service';
+import { ClienteService } from '../cliente/cliente.service';
+import { UpdateImovelDto } from '../imovel/dto/update-imovel.dto';
 
 @Injectable()
 export class TransacoesService {

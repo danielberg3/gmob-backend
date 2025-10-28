@@ -25,10 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     // Verifica se o token ainda está válido no cache Redis
-    const cachedToken = await this.cacheService.getToken(payload.sub);
-    if (!cachedToken) {
-      throw new UnauthorizedException('Token inválido ou expirado');
-    }
+    
 
     // Busca o usuário no banco de dados
     const user = await this.prismaService.corretor.findUnique({

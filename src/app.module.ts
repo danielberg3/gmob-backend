@@ -6,7 +6,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { CorretorModule } from './corretor/corretor.module';
-import { RedisCacheModule } from './cache/cache.module';
+import { InMemoryCacheModule } from './cache/cache.module';
 import { ClienteModule } from './cliente/cliente.module';
 import { MetricasModule } from './metricas/metricas.module';
 import { ImovelModule } from './imovel/imovel.module';
@@ -18,9 +18,10 @@ import { TransacoesModule } from './transacoes/transacoes.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ".env",
     }),
     PrismaModule,
-    RedisCacheModule,
+    InMemoryCacheModule,
     AuthModule,
     ClienteModule,
     CorretorModule,

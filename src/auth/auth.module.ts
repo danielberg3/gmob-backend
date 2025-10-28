@@ -7,19 +7,19 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { CacheService } from '../cache/cache.service';
-import { RedisCacheModule } from '../cache/cache.module';
+import { InMemoryCacheModule } from '../cache/cache.module';
 
 @Module({
   imports: [
     PassportModule,
-    RedisCacheModule,
+    InMemoryCacheModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: {
+          secret: configService.get<string>('JWT_SECRET'),
+          signOptions: {
           expiresIn: configService.get<string>('JWT_EXPIRES_IN'),
-        },
+      },
       }),
       inject: [ConfigService],
     }),

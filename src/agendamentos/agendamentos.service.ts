@@ -4,7 +4,7 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { AgendamentoVisita, Perfil } from '@prisma/client';
 import { CreateAgendamentoDto } from './dto/create-agendamento.dto';
 import { StatusAgendamento } from '@prisma/client';

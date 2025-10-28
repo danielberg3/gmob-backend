@@ -1,14 +1,19 @@
 import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum } from 'class-validator';
 import { StatusImovel, TipoImovel } from '@prisma/client';
+import { Disponibilidade } from '@prisma/client';
 
 export class CreateImovelDto {
   
   @IsNotEmpty({ message: 'O tipo do imóvel é obrigatório.' })
   tipo_imovel_id: number; 
 
-  @IsEnum(StatusImovel)
-  @IsNotEmpty({ message: 'O status do imóvel é obrigatório.' })
-  status: StatusImovel;
+  @IsNumber()
+  @IsOptional()
+  valor_aluguel?: number;
+
+  @IsEnum(Disponibilidade)
+  @IsNotEmpty({ message: 'A disponibilidade é obrigatória.' })
+  disponibilidade: Disponibilidade;
 
   @IsString() @IsNotEmpty() 
   estado: string;

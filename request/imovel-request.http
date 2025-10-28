@@ -2,7 +2,7 @@
 
 
 @baseUrl = http://localhost:3000/api
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImpvYW9AZW1haWwuY29tIiwic3ViIjoxLCJwZXJmaWwiOiJhZG1pbmlzdHJhZG9yIiwiaWF0IjoxNzYxNjIzNDAyLCJleHAiOjE3NjIyMjgyMDJ9.YEbjJvWbyI3C4ua9-RaY7emadWjoArC0QkcPvyF5mjo
 
 @baseUrl = http://localhost:3000/api
 @token = {{login.response.body.access_token}}
@@ -34,26 +34,27 @@ Content-Type: application/json
 
 ### =================== CRUD Imóvel ===================
 
-### 1. Criar novo imóvel
+### 1. Criar novo imóvel (Atualizado com RF_05)
 # Requer autenticação de Corretor ou Administrador.
-# O corretor_id é associado automaticamente com base no token.
-# O tipo_imovel_id deve corresponder a um tipo existente (ex: 1 para 'Casa').
+# O campo 'status' é definido automaticamente como 'disponivel' (RN_06).
+# Adicionados campos 'disponibilidade' e 'valor_aluguel' (Task 1).
 POST {{baseUrl}}/imoveis
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
   "tipo_imovel_id": 1,
-  "status": "disponivel",
+  "disponibilidade": "ambos",
+  "valor": 950000.00,
+  "valor_aluguel": 4500.00,
   "estado": "São Paulo",
   "cidade": "São Paulo",
-  "rua": "Avenida Faria Lima",
-  "numero": "1000",
-  "complemento": "Andar 5, Sala 502",
-  "valor": 1250000.00,
+  "rua": "Avenida Paulista",
+  "numero": "1500",
+  "complemento": "Apto 101",
   "area": 120.0,
-  "numero_comodos": 4,
-  "descricao": "Escritório comercial moderno em localização privilegiada."
+  "numero_comodos": 3,
+  "descricao": "Apartamento novo na Paulista."
 }
 
 ###
@@ -77,10 +78,10 @@ Content-Type: application/json
 }
 
 
-### 2. Listar imóveis com filtros e paginação
-# Rota pública, mas o resultado muda se o usuário for um corretor (mostra apenas os seus).
-# Teste diferentes combinações de filtros.
-GET {{baseUrl}}/imoveis?page=1&limit=10&cidade=São Paulo&status=disponivel&valorMax=1500000
+### 2. Listar imóveis com filtros (Atualizado com Task 10)
+# Rota pública, mas o resultado muda se o usuário for um corretor.
+# Adicionados filtros de 'disponibilidade' e 'valorAluguelMax'.
+GET {{baseUrl}}/imoveis?page=1&limit=10&disponibilidade=ambos&valorAluguelMax=5000
 Authorization: Bearer {{token}}
 
 
@@ -88,19 +89,24 @@ Authorization: Bearer {{token}}
 
 ### 3. Obter detalhes de um imóvel específico
 # Altere o '1' para um ID de imóvel existente.
-# Requer autenticação do corretor dono ou de um administrador.
-GET {{baseUrl}}/imoveis/7
+# Resposta agora inclui 'imagens', 'valor_aluguel', 'disponibilidade' (Task 4).
+GET {{baseUrl}}/imoveis/2
 Authorization: Bearer {{token}}
 
 
 ###
 
-### 4. Atualizar um imóvel existente
+### 4. Atualizar um imóvel existente (Atualizado com Task 1)
 # Altere o '1' para um ID de imóvel existente.
-# Requer autenticação do corretor dono ou de um administrador.
-PATCH {{baseUrl}}/imoveis/5
+# Atualizando os novos campos 'valor_aluguel' e 'disponibilidade'.
+PATCH {{baseUrl}}/imoveis/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
+
+{
+  "valor_aluguel": 5000.00,
+  "disponibilidade": "aluguel"
+}
 
 {
   "valor": 1300000.00,
@@ -110,65 +116,74 @@ Content-Type: application/json
 
 ###
 
-### 5. Remover um imóvel
+### 5. Upload de Imagens para um imóvel (NOVO - Task 2)
 # Altere o '1' para um ID de imóvel existente.
-# Requer autenticação do corretor dono ou de um administrador.
-DELETE {{baseUrl}}/imoveis/5
+# Esta requisição deve ser executada de um cliente que suporte multipart/form-data (como Postman ou Insomnia).
+# Anexe os arquivos de imagem no campo 'files'.
+POST {{baseUrl}}/imoveis/1/imagens
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data
+
+### 6. Remover um imóvel
+# Altere o '2' para um ID de imóvel existente SEM transações.
+DELETE {{baseUrl}}/imoveis/2
 Authorization: Bearer {{token}}
 
 ###
 ### =================== TESTES DE TRATAMENTO DE ERROS ===================
 ###
 
-### ERRO 1: Criar imóvel com tipo_imovel_id inválido
-# Esperado: Erro 400 (Bad Request) por violação de chave estrangeira (P2003).
+### ERRO 1: Criar imóvel com endereço duplicado (RN_05)
+# Esperado: Erro 409 (Conflict).
 POST {{baseUrl}}/imoveis
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "tipo_imovel_id": 999,
-  "status": "disponivel",
-  "estado": "Estado de Erro",
-  "cidade": "Cidade de Erro",
-  "rua": "Rua do Erro",
-  "numero": "999",
-  "valor": 100,
-  "area": 10,
-  "numero_comodos": 1
+  "tipo_imovel_id": 1,
+  "disponibilidade": "venda",
+  "valor": 100000.00,
+  "estado": "São Paulo",
+  "cidade": "São Paulo",
+  "rua": "Avenida Paulista",
+  "numero": "1500",
+  "complemento": "Apto 101",
+  "area": 120.0,
+  "numero_comodos": 3
 }
 
 ###
 
-### ERRO 2: Criar tipo de imóvel com nome duplicado
-# Esperado: Erro 409 (Conflict) por violação de campo único (P2002).
-POST {{baseUrl}}/tipos-imoveis
+### ERRO 2: Tentar apagar um imóvel com transação (NOVO - RN_25 / Task 8)
+# Esperado: Erro 409 (Conflict).
+# (Assumindo que o imóvel com ID 1 já tem uma venda/aluguel)
+DELETE {{baseUrl}}/imoveis/1
 Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "nome_tipo": "Casa"
-}
 
 ###
 
-### ERRO 3: Tentar aceder a rota protegida sem token
-# Esperado: Erro 401 (Unauthorized).
-GET {{baseUrl}}/auth/profile
-
+### ERRO 3: Tentar encontrar um recurso que não existe
+# Esperado: Erro 404 (Not Found).
+GET {{baseUrl}}/imoveis/9999
+Authorization: Bearer {{token}}
 
 ###
 
 ### ERRO 4: Criar imóvel com dados inválidos (DTO)
-# Esperado: Erro 400 (Bad Request) do ValidationPipe.
+# Esperado: Erro 400 (Bad Request) - 'disponibilidade' faltando.
 POST {{baseUrl}}/imoveis
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "tipo_imovel_id": "isto-nao-e-um-numero",
-  "status": "disponivel",
-  "cidade": "São Paulo"
+  "tipo_imovel_id": 1,
+  "valor": 100.00,
+  "estado": "Teste",
+  "cidade": "Teste",
+  "rua": "Rua Teste",
+  "numero": "123",
+  "area": 50.0,
+  "numero_comodos": 2
 }
 
 ###

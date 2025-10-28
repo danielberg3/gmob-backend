@@ -12,8 +12,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateImovelDto } from './dto/create-imovel.dto';
 import { UpdateImovelDto } from './dto/update-imovel.dto';
 import { Imovel, Perfil, Disponibilidade } from '@prisma/client';
-import { TransacoesService } from 'src/transacoes/transacoes.service';
-import { AgendamentosService } from 'src/agendamentos/agendamentos.service';
+import { TransacoesService } from '../transacoes/transacoes.service';
+import { AgendamentosService } from '../agendamentos/agendamentos.service';
 import { Prisma } from '@prisma/client';
 
 @Injectable()

@@ -2,7 +2,7 @@
 
 
 @baseUrl = http://localhost:3000/api
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImpvYW9AZW1haWwuY29tIiwic3ViIjoxLCJwZXJmaWwiOiJhZG1pbmlzdHJhZG9yIiwiaWF0IjoxNzYxNjIyMTMxLCJleHAiOjE3NjIyMjY5MzF9.WY2CxKHgcpwzTyNRYhtd9Wf82ZrzFuwi4ctS15Bgl54
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImpvYW9AZW1haWwuY29tIiwic3ViIjoxLCJwZXJmaWwiOiJhZG1pbmlzdHJhZG9yIiwiaWF0IjoxNzYxNjIzNDAyLCJleHAiOjE3NjIyMjgyMDJ9.YEbjJvWbyI3C4ua9-RaY7emadWjoArC0QkcPvyF5mjo
 
 @baseUrl = http://localhost:3000/api
 @token = {{login.response.body.access_token}}
@@ -90,7 +90,7 @@ Authorization: Bearer {{token}}
 ### 3. Obter detalhes de um imóvel específico
 # Altere o '1' para um ID de imóvel existente.
 # Resposta agora inclui 'imagens', 'valor_aluguel', 'disponibilidade' (Task 4).
-GET {{baseUrl}}/imoveis/1
+GET {{baseUrl}}/imoveis/2
 Authorization: Bearer {{token}}
 
 

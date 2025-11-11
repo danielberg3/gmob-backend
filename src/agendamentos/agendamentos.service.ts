@@ -44,6 +44,7 @@ export class AgendamentosService {
       const dataHoraInicio = new Date(`${data_visita}T${hora_inicio}:00`);
       const dataHoraTermino = new Date(`${data_visita}T${hora_termino}:00`);
 
+      
       if (dataHoraInicio <= new Date()) {
         throw new ForbiddenException('A data da visita deve ser futura');
       }
@@ -54,20 +55,23 @@ export class AgendamentosService {
         );
       }
 
-      const conflito = await this.prisma.agendamentoVisita.findFirst({
+      
+      const conflitoDia = await this.prisma.agendamentoVisita.findFirst({
         where: {
           cliente_id,
           imovel_id,
           data_visita: new Date(data_visita),
-          hora_inicio: dataHoraInicio,
         },
       });
 
-      if (conflito) {
-        throw new ForbiddenException(
-          'Já existe um agendamento para esse cliente/imóvel/data/hora',
+      if (conflitoDia) {
+        throw new ConflictException(
+          'O mesmo cliente não pode agendar mais de uma visita ao mesmo imóvel no mesmo dia.',
         );
       }
+      
+      
+      
 
       const agendamento = await this.prisma.agendamentoVisita.create({
         data: {
@@ -83,11 +87,12 @@ export class AgendamentosService {
 
       return agendamento;
     } catch (error) {
-      if (error instanceof ForbiddenException) {
+      if (error instanceof ForbiddenException || error instanceof ConflictException) {
         throw error;
       }
-
-      throw new ForbiddenException('Erro ao criar agendamento');
+      
+      
+      throw new ConflictException('Erro ao criar agendamento. Verifique se o horário já está agendado.');
     }
   }
 
@@ -118,6 +123,7 @@ export class AgendamentosService {
         corretor_id?: number;
       } = {};
 
+      
       if (user.perfil === 'corretor') {
         where.corretor_id = user.corretor_id;
       }
@@ -157,9 +163,6 @@ export class AgendamentosService {
   }
 
   async findOne(id: number, user: currentUser): Promise<AgendamentoVisita> {
-    console.log(
-      `Buscando agendamento com ID: ${id} para o usuário: ${user.perfil}`,
-    );
     try {
       if (user.perfil !== 'corretor' && user.perfil !== 'administrador') {
         throw new ForbiddenException(
@@ -171,6 +174,7 @@ export class AgendamentosService {
         corretor_id?: number;
       } = { agendamento_id: id };
 
+      
       if (user.perfil === 'corretor') {
         where.corretor_id = user.corretor_id;
       }
@@ -180,7 +184,8 @@ export class AgendamentosService {
       });
 
       if (!agendamento) {
-        throw new ForbiddenException('Agendamento não encontrado');
+        
+        throw new ForbiddenException('Agendamento não encontrado'); 
       }
 
       return agendamento;
@@ -202,6 +207,7 @@ export class AgendamentosService {
       throw new ForbiddenException('Acesso negado');
     }
 
+    
     const agendamento = await this.prisma.agendamentoVisita.findFirst({
       where: {
         agendamento_id: id,
@@ -215,21 +221,28 @@ export class AgendamentosService {
       throw new NotFoundException('Agendamento não encontrado');
     }
 
-    const existeOutro = await this.prisma.agendamentoVisita.findFirst({
+    const imovelId = dto.imovel_id ?? agendamento.imovel_id;
+    const clienteId = dto.cliente_id ?? agendamento.cliente_id;
+    const dataVisita = dto.data_visita ? new Date(dto.data_visita) : agendamento.data_visita;
+    const horaInicio = dto.hora_inicio ?? agendamento.hora_inicio;
+
+    
+    const existeConflito = await this.prisma.agendamentoVisita.findFirst({
       where: {
-        imovel_id: dto.imovel_id ?? agendamento.imovel_id,
-        data_visita: dto.data_visita
-          ? new Date(dto.data_visita)
-          : agendamento.data_visita,
-        NOT: { agendamento_id: id },
+        imovel_id: imovelId,
+        cliente_id: clienteId,
+        data_visita: dataVisita,
+        hora_inicio: horaInicio,
+        NOT: { agendamento_id: id }, 
       },
     });
 
-    if (existeOutro) {
+    if (existeConflito) {
       throw new ConflictException(
-        "Já existe um registro com este valor. O campo 'cliente_id, imovel_id, data_visita, hora_inicio' deve ser único.",
+        "Já existe um agendamento com o mesmo 'cliente', 'imóvel', 'data' e 'hora de início'.",
       );
     }
+    
 
     const atualizado = await this.prisma.agendamentoVisita.update({
       where: { agendamento_id: id },
@@ -257,8 +270,14 @@ export class AgendamentosService {
         throw new ForbiddenException('Acesso negado');
       }
 
-      const agendamento = await this.prisma.agendamentoVisita.findUnique({
-        where: { agendamento_id: id },
+
+      const agendamento = await this.prisma.agendamentoVisita.findFirst({
+        where: { 
+          agendamento_id: id,
+          ...(user.perfil === Perfil.corretor && { 
+            corretor_id: user.corretor_id 
+          }),
+        },
       });
 
       if (!agendamento) {
@@ -285,12 +304,18 @@ export class AgendamentosService {
         throw new ForbiddenException('Acesso negado');
       }
 
-      const agendamento = await this.prisma.agendamentoVisita.findUnique({
-        where: { agendamento_id: id },
+
+      const agendamento = await this.prisma.agendamentoVisita.findFirst({
+        where: {
+          agendamento_id: id,
+          ...(user.perfil === 'corretor' && {
+            corretor_id: user.corretor_id,
+          }),
+        },
       });
 
       if (!agendamento) {
-        throw new NotFoundException('Agendamento não encontrado');
+        throw new NotFoundException('Agendamento não encontrado ou acesso negado');
       }
 
       const removido = await this.prisma.agendamentoVisita.delete({
@@ -299,7 +324,7 @@ export class AgendamentosService {
 
       return removido;
     } catch (error) {
-      if (error instanceof ForbiddenException) throw error;
+      if (error instanceof ForbiddenException || error instanceof NotFoundException) throw error;
       throw new Error('Erro ao remover agendamento');
     }
   }
@@ -308,16 +333,15 @@ export class AgendamentosService {
       throw new ForbiddenException('Acesso negado');
     }
 
-    const agendamentos = await this.prisma.agendamentoVisita.findMany({
-      where: { imovel_id: imovelId },
-    });
+    const whereClause: any = { imovel_id: imovelId };
 
-    if (agendamentos.length === 0) {
-      return;
+    
+    if (user.perfil === 'corretor') {
+        whereClause.corretor_id = user.corretor_id;
     }
 
     await this.prisma.agendamentoVisita.deleteMany({
-      where: { imovel_id: imovelId },
+      where: whereClause,
     });
   }
 }

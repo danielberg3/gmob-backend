@@ -13,8 +13,9 @@ import {
 } from '@nestjs/common';
 import { AgendamentosService } from './agendamentos.service';
 import { CreateAgendamentoDto } from './dto/create-agendamento.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { StatusAgendamento } from '@prisma/client';
 import { UpdateAgendamentoDto } from './dto/update-agendamento.dto';
 

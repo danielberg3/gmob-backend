@@ -11,6 +11,7 @@ import { CreateTransacoesDto } from './dto/create-transacoes.dto';
 import { ImovelService } from '../imovel/imovel.service';
 import { ClienteService } from '../cliente/cliente.service';
 import { UpdateImovelDto } from '../imovel/dto/update-imovel.dto';
+import { StatusAgendamento, TipoTransacao } from '@prisma/client';
 
 @Injectable()
 export class TransacoesService {
@@ -21,14 +22,10 @@ export class TransacoesService {
     private clienteService: ClienteService,
   ) {}
 
-  async create(createTransacoesDto: CreateTransacoesDto, currentUser: any) {
-    const cliente = await this.clienteService.findByCpf(
-      createTransacoesDto.cpf,
-    );
+    async create(createTransacoesDto: CreateTransacoesDto, currentUser: any) {
+    const cliente = await this.clienteService.findByCpf(createTransacoesDto.cpf);
 
     if (currentUser.corretor_id !== cliente.corretor_id) {
-      console.log('currentUser', currentUser);
-      console.log('cliente', cliente.cliente_id);
       throw new UnauthorizedException(
         'Você não tem permissão para realizar transações para este cliente.',
       );
@@ -38,23 +35,23 @@ export class TransacoesService {
       createTransacoesDto.imovel_id,
       currentUser,
     );
+
     if (imovel.status !== 'disponivel') {
-      throw new BadRequestException(
-        'Imóvel não está disponível para transação. ',
-      );
+      throw new BadRequestException('Imóvel não está disponível para transação.');
     }
 
-    const [_, transacao] = await this.prismaService.$transaction([
-      this.prismaService.imovel.update({
+    const [_, transacao] = await this.prismaService.$transaction(async (tx) => {
+      const imovelAtualizado = await tx.imovel.update({
         where: { imovel_id: createTransacoesDto.imovel_id },
         data: {
           status:
-            createTransacoesDto.tipo_transacao === ('venda' as any)
+            createTransacoesDto.tipo_transacao === TipoTransacao.venda
               ? 'vendido'
               : 'alugado',
         },
-      }),
-      this.prismaService.transacaoImovel.create({
+      });
+
+      const novaTransacao = await tx.transacaoImovel.create({
         data: {
           imovel_id: createTransacoesDto.imovel_id,
           cliente_id: cliente.cliente_id,
@@ -69,46 +66,65 @@ export class TransacoesService {
           tipo_transacao: true,
           data_transacao: true,
         },
-      }),
-    ]);
+      });
 
-    return transacao;
+      return [imovelAtualizado, novaTransacao];
+    });
+
+    let agendamentosPendentes: any[] = [];
+    if (transacao.tipo_transacao === TipoTransacao.venda) {
+      agendamentosPendentes =
+        await this.prismaService.agendamentoVisita.findMany({
+          where: {
+            imovel_id: transacao.imovel_id,
+            status_agendamento: StatusAgendamento.agendado,
+          },
+          include: {
+            cliente: {
+              select: { nome: true, telefone: true, email: true },
+            },
+          },
+        });
+    }
+
+    return { transacao, agendamentosPendentes };
   }
 
   async findAll(currentUser: any, page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit;
+    const whereClause = { corretor_id: currentUser.corretor_id };
 
     const [transacoes, total] = await Promise.all([
-      await this.prismaService.transacaoImovel.findMany({
+      this.prismaService.transacaoImovel.findMany({
         skip,
         take: limit,
-        where: {
-          corretor_id: currentUser.corretor_id,
-        },
-        select: {
-          transacao_id: true,
-          imovel_id: true,
-          cliente_id: true,
+        where: whereClause,
+        include: {
+          imovel: {
+            select: {
+              imovel_id: true,
+              rua: true,
+              numero: true,
+              cidade: true,
+              valor: true,
+              valor_aluguel: true,
+            },
+          },
+          cliente: {
+            select: {
+              cliente_id: true,
+              nome: true,
+            },
+          },
         },
       }),
-      this.prismaService.transacaoImovel.count(),
+      this.prismaService.transacaoImovel.count({
+        where: whereClause,
+      }),
     ]);
 
-    const transacoesComDetalhes = await Promise.all(
-      transacoes.map(async (transacao) => ({
-        transacao_id: transacao.transacao_id,
-        imovel: await this.imovelService.findOne(
-          transacao.imovel_id,
-          currentUser,
-        ),
-        cliente: await this.clienteService.findOne(
-          transacao.cliente_id,
-          currentUser,
-        ),
-      })),
-    );
     return {
-      transacoesComDetalhes,
+      transacoesComDetalhes: transacoes,
       pagination: {
         page,
         limit,
@@ -150,7 +166,7 @@ export class TransacoesService {
     return { message: 'Transação removida com sucesso' };
   }
 
-    async removeByImovelId(id: number, currentUser: any) {
+  async removeByImovelId(id: number, currentUser: any) {
     const transacoes = await this.prismaService.transacaoImovel.findMany({
       where: { imovel_id: id },
       select: {
@@ -173,13 +189,9 @@ export class TransacoesService {
   async findOne(id: number, currentUser: any) {
     const transacao = await this.prismaService.transacaoImovel.findUnique({
       where: { transacao_id: id },
-      select: {
-        transacao_id: true,
-        imovel_id: true,
-        cliente_id: true,
-        corretor_id: true,
-        tipo_transacao: true,
-        data_transacao: true,
+      include: {
+        imovel: true,
+        cliente: true,
       },
     });
 
@@ -187,21 +199,15 @@ export class TransacoesService {
       throw new NotFoundException(`Transação com ID ${id} não encontrada.`);
     }
 
-    if (transacao.corretor_id !== currentUser.corretor_id && currentUser.perfil !== 'administrador') {
-        throw new UnauthorizedException('Você não tem permissão para visualizar esta transação.');
+    if (
+      transacao.corretor_id !== currentUser.corretor_id &&
+      currentUser.perfil !== 'administrador'
+    ) {
+      throw new UnauthorizedException(
+        'Você não tem permissão para visualizar esta transação.',
+      );
     }
 
-    const [imovelDetalhes, clienteDetalhes] = await Promise.all([
-      this.imovelService.findOne(transacao.imovel_id, currentUser),
-      this.clienteService.findOne(transacao.cliente_id, currentUser),
-    ]);
-
-    return {
-      transacao_id: transacao.transacao_id,
-      tipo_transacao: transacao.tipo_transacao,
-      data_transacao: transacao.data_transacao,
-      imovel: imovelDetalhes,
-      cliente: clienteDetalhes,
-    };
+    return transacao;
   }
 }

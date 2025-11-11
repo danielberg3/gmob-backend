@@ -31,8 +31,9 @@ export class TransacoesController {
     @Query('page', ParseIntPipe) page: number = 1,
     @Query('limit', ParseIntPipe) limit: number = 10,
   ) {
-    return this.transacoesService.findAll(req.user);
+    return this.transacoesService.findAll(req.user, page, limit);
   }
+
 
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number, @Request() req) {

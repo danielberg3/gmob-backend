@@ -1,9 +1,18 @@
 import { Injectable } from "@nestjs/common";
-import { PrismaService } from "src/prisma/prisma.service";
+import { PrismaService } from "../prisma/prisma.service";
+import { StatusImovel } from "@prisma/client";
 
 @Injectable()
 export class MetricasService {
   constructor(private prismaService: PrismaService) {}
+
+  private calcularComissaoVenda(valor: number): number {
+    return valor * 0.05;
+  }
+
+  private calcularComissaoAluguel(valor: number): number {
+    return valor; 
+  }
 
   async getMetricas(user: any) {        
         let imoveisDisponiveis = 0;
@@ -12,6 +21,8 @@ export class MetricasService {
         let totalClientes = 0;
         let totalTransacoes = 0;
         let totalVendas = 0;
+        let comissaoVendas = 0;
+        let comissaoAluguel = 0;
 
     if (user.perfil !== 'administrador') {
         const result = await this.prismaService.imovel.groupBy({
@@ -51,28 +62,38 @@ export class MetricasService {
             },
         });
 
-        const listaDeImoveis = await this.prismaService.transacaoImovel.findMany
-        ({
+        const imoveisVendidosList = await this.prismaService.imovel.findMany({
             where: {
-                corretor_id: user.corretor_id,  
+                corretor_id: user.corretor_id,
+                status: StatusImovel.vendido,
             },
             select: {
-                imovel_id: true,
-            },
+                valor: true,
+            }
         });
 
-        const resultado = await this.prismaService.imovel.aggregate({
-            _sum: {
-                valor: true,
-            },
+        for (const imovel of imoveisVendidosList) {
+            const valor = Number(imovel.valor);
+            totalVendas += valor;
+            comissaoVendas += this.calcularComissaoVenda(valor);
+        }
+
+        const imoveisAlugadosList = await this.prismaService.imovel.findMany({
             where: {
-                imovel_id: {
-                    in: listaDeImoveis.map(item => item.imovel_id),
-                },
-                status: 'vendido',
+                corretor_id: user.corretor_id,
+                status: StatusImovel.alugado,
             },
+            select: {
+                valor_aluguel: true,
+            }
         });
-        totalVendas = resultado._sum.valor ? Number(resultado._sum.valor) : 0;
+
+        for (const imovel of imoveisAlugadosList) {
+            if (imovel.valor_aluguel) {
+                const valor = Number(imovel.valor_aluguel);
+                comissaoAluguel += this.calcularComissaoAluguel(valor);
+            }
+        }
         
     } else {
         const result = await this.prismaService.imovel.groupBy({
@@ -104,26 +125,38 @@ export class MetricasService {
 
         totalTransacoes = await this.prismaService.transacaoImovel.count();
 
-        const listaDeImoveis = await this.prismaService.transacaoImovel.findMany
-        ({
-            select: {
-                imovel_id: true,
+        const imoveisVendidosList = await this.prismaService.imovel.findMany({
+            where: {
+                status: StatusImovel.vendido,
             },
+            select: {
+                valor: true,
+            }
         });
 
-        const resultado = await this.prismaService.imovel.aggregate({
-            _sum: {
-                valor: true,
-            },
+        for (const imovel of imoveisVendidosList) {
+            const valor = Number(imovel.valor);
+            totalVendas += valor;
+            comissaoVendas += this.calcularComissaoVenda(valor);
+        }
+
+        const imoveisAlugadosList = await this.prismaService.imovel.findMany({
             where: {
-                imovel_id: {
-                    in: listaDeImoveis.map(item => item.imovel_id),
-                },
-                status: 'vendido',
+                status: StatusImovel.alugado,
             },
+            select: {
+                valor_aluguel: true,
+            }
         });
-        totalVendas = resultado._sum.valor ? Number(resultado._sum.valor) : 0;
+
+        for (const imovel of imoveisAlugadosList) {
+            if (imovel.valor_aluguel) {
+                const valor = Number(imovel.valor_aluguel);
+                comissaoAluguel += this.calcularComissaoAluguel(valor);
+            }
+        }
     }
+
     return {    
         imoveisDisponiveis,
         imoveisVendidos,
@@ -131,6 +164,8 @@ export class MetricasService {
         totalClientes,
         totalTransacoes,
         totalVendas,
+        comissaoVendas,
+        comissaoAluguel
     };
   }
 }

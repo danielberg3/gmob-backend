@@ -1,5 +1,5 @@
 import { Controller, Get, UseGuards, Request} from "@nestjs/common";
-import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { MetricasService } from "./metricas.service";
 
 @Controller('metricas')

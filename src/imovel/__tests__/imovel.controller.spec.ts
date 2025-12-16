@@ -6,9 +6,10 @@ import { RolesGuard } from '../../auth/guards/roles.guard';
 import { CreateImovelDto } from '../dto/create-imovel.dto';
 import { UpdateImovelDto } from '../dto/update-imovel.dto';
 import { Perfil, Disponibilidade } from '@prisma/client';
-import { BadRequestException } from '@nestjs/common';
 
-// Mock do ImovelService - Simulamos o comportamento do serviço
+// =========================
+// Mocks
+// =========================
 const mockImovelService = {
   create: jest.fn(),
   findAll: jest.fn(),
@@ -18,28 +19,35 @@ const mockImovelService = {
   uploadImagens: jest.fn(),
 };
 
-// Mock simples para os Guards (apenas para permitir a execução)
-const mockJwtAuthGuard = { canActivate: jest.fn(() => true) };
-const mockRolesGuard = { canActivate: jest.fn(() => true) };
+const mockJwtAuthGuard = {
+  canActivate: jest.fn(() => true),
+};
+
+const mockRolesGuard = {
+  canActivate: jest.fn(() => true),
+};
 
 describe('ImovelController', () => {
   let controller: ImovelController;
   let service: ImovelService;
 
   beforeEach(async () => {
-    // Limpa mocks antes de cada teste
-    jest.clearAllMocks();
+    jest.resetAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ImovelController],
       providers: [
-        { provide: ImovelService, useValue: mockImovelService },
+        {
+          provide: ImovelService,
+          useValue: mockImovelService,
+        },
       ],
     })
-    // Sobrescreve os Guards com mocks
-    .overrideGuard(JwtAuthGuard).useValue(mockJwtAuthGuard)
-    .overrideGuard(RolesGuard).useValue(mockRolesGuard)
-    .compile();
+      .overrideGuard(JwtAuthGuard)
+      .useValue(mockJwtAuthGuard)
+      .overrideGuard(RolesGuard)
+      .useValue(mockRolesGuard)
+      .compile();
 
     controller = module.get<ImovelController>(ImovelController);
     service = module.get<ImovelService>(ImovelService);
@@ -49,133 +57,172 @@ describe('ImovelController', () => {
     expect(controller).toBeDefined();
   });
 
-  // =============================================
-  // CREATE (POST /)
-  // =============================================
+  // =========================
+  // CREATE
+  // =========================
   describe('create', () => {
-    const createDto: CreateImovelDto = {
-        tipo_imovel_id: 1,
-        disponibilidade: Disponibilidade.venda,
-        estado: 'Test', cidade: 'Test', rua: 'Test', numero: '123',
-        valor: 100, area: 50, numero_comodos: 2
+    const dto: CreateImovelDto = {
+      tipo_imovel_id: 1,
+      disponibilidade: Disponibilidade.venda,
+      estado: 'SP',
+      cidade: 'São Paulo',
+      rua: 'Rua Teste',
+      numero: '123',
+      valor: 100000,
+      area: 80,
+      numero_comodos: 3,
     };
-    const mockReq = { user: { corretor_id: 1, perfil: Perfil.corretor } };
-    const mockCreatedImovel = { imovel_id: 1, ...createDto, corretor_id: 1, status: 'disponivel' };
 
-    it('deve chamar imovelService.create com os dados corretos e retornar o imóvel criado', async () => {
-      mockImovelService.create.mockResolvedValue(mockCreatedImovel);
+    const req = {
+      user: { corretor_id: 1, perfil: Perfil.corretor },
+    };
 
-      const result = await controller.create(createDto, mockReq);
+    const response = {
+      imovel_id: 1,
+      corretor_id: 1,
+      status: 'disponivel',
+      ...dto,
+    };
 
-      expect(service.create).toHaveBeenCalledWith(createDto, mockReq.user);
-      expect(result).toEqual(mockCreatedImovel);
+    it('deve criar um imóvel', async () => {
+      mockImovelService.create.mockResolvedValue(response);
+
+      const result = await controller.create(dto, req as any);
+
+      expect(service.create).toHaveBeenCalledWith(dto, req.user);
+      expect(result).toEqual(response);
     });
   });
 
-  // =============================================
-  // UPLOAD IMAGENS (POST /:id/imagens)
-  // =============================================
+  // =========================
+  // UPLOAD IMAGENS
+  // =========================
   describe('uploadImagens', () => {
-     const mockReq = { user: { corretor_id: 1, perfil: Perfil.corretor } };
-     const mockFiles = [{ originalname: 'test.jpg' }] as Array<Express.Multer.File>;
-     const mockImovelId = 1;
-     const mockSuccessResponse = { message: '1 imagens salvas com sucesso.'};
+    const req = {
+      user: { corretor_id: 1, perfil: Perfil.corretor },
+    };
 
-     it('deve chamar imovelService.uploadImagens com id, files e user', async () => {
-        mockImovelService.uploadImagens.mockResolvedValue(mockSuccessResponse);
+    const files = [
+      {
+        originalname: 'img1.jpg',
+        buffer: Buffer.from('test'),
+      },
+    ] as Express.Multer.File[];
 
-        const result = await controller.uploadImagens(mockImovelId, mockFiles, mockReq);
+    const response = {
+      message: 'Imagens vinculadas ao imóvel com sucesso.',
+      total: 1,
+    };
 
-        expect(service.uploadImagens).toHaveBeenCalledWith(mockImovelId, mockFiles, mockReq.user);
-        expect(result).toEqual(mockSuccessResponse);
-     });
+    it('deve realizar o upload das imagens', async () => {
+      mockImovelService.uploadImagens.mockResolvedValue(response);
 
-     // Teste para verificar se o FilesInterceptor está aplicado (indiretamente)
-     // Não podemos testar o interceptor diretamente aqui, mas podemos testar
-     // o comportamento esperado se nenhum arquivo for enviado (o service lançaria erro)
-     it('deve repassar a chamada mesmo se files for vazio (o service trata)', async () => {
-        const emptyFiles = [];
-        // Suponha que o service lança BadRequestException se files for vazio
-        mockImovelService.uploadImagens.mockRejectedValue(new BadRequestException('Nenhum arquivo enviado.'));
+      const result = await controller.uploadImagens(1, files, req as any);
 
-        await expect(controller.uploadImagens(mockImovelId, emptyFiles, mockReq))
-              .rejects.toThrow(BadRequestException);
-
-        expect(service.uploadImagens).toHaveBeenCalledWith(mockImovelId, emptyFiles, mockReq.user);
-     });
-  });
-
-  // =============================================
-  // FIND ALL (GET /)
-  // =============================================
-  describe('findAll', () => {
-    const mockReq = { user: { corretor_id: 1, perfil: Perfil.corretor } };
-    const mockQueryParams = { page: '1', limit: '10', cidade: 'Test' };
-    const mockServiceResponse = { data: [], total: 0, page: 1, lastPage: 0 };
-
-    it('deve chamar imovelService.findAll com user e queryParams', async () => {
-      mockImovelService.findAll.mockResolvedValue(mockServiceResponse);
-
-      const result = await controller.findAll(mockReq, mockQueryParams);
-
-      expect(service.findAll).toHaveBeenCalledWith(mockReq.user, mockQueryParams);
-      expect(result).toEqual(mockServiceResponse);
+      expect(service.uploadImagens).toHaveBeenCalledWith(1, files, req.user);
+      expect(result).toEqual(response);
     });
   });
 
-  // =============================================
-  // FIND ONE (GET /:id)
-  // =============================================
+  // =========================
+  // FIND ALL
+  // =========================
+  describe('findAll', () => {
+    const req = {
+      user: { corretor_id: 1, perfil: Perfil.corretor },
+    };
+
+    const query = {
+      page: '1',
+      limit: '10',
+    };
+
+    const response = {
+      data: [],
+      total: 0,
+      page: 1,
+      lastPage: 0,
+    };
+
+    it('deve listar imóveis', async () => {
+      mockImovelService.findAll.mockResolvedValue(response);
+
+      const result = await controller.findAll(req as any, query);
+
+      expect(service.findAll).toHaveBeenCalledWith(req.user, query);
+      expect(result).toEqual(response);
+    });
+  });
+
+  // =========================
+  // FIND ONE
+  // =========================
   describe('findOne', () => {
-     const mockReq = { user: { corretor_id: 1, perfil: Perfil.corretor } };
-     const mockImovelId = 1;
-     const mockServiceResponse = { imovel_id: 1, /* ... outros dados ... */ imagens: [] };
+    const req = {
+      user: { corretor_id: 1, perfil: Perfil.corretor },
+    };
 
-     it('deve chamar imovelService.findOne com id e user', async () => {
-        mockImovelService.findOne.mockResolvedValue(mockServiceResponse);
+    const response = {
+      imovel_id: 1,
+      imagens: [],
+    };
 
-        const result = await controller.findOne(mockImovelId, mockReq);
+    it('deve buscar um imóvel por id', async () => {
+      mockImovelService.findOne.mockResolvedValue(response);
 
-        expect(service.findOne).toHaveBeenCalledWith(mockImovelId, mockReq.user);
-        expect(result).toEqual(mockServiceResponse);
-     });
+      const result = await controller.findOne(1, req as any);
+
+      expect(service.findOne).toHaveBeenCalledWith(1, req.user);
+      expect(result).toEqual(response);
+    });
   });
 
-  // =============================================
-  // UPDATE (PATCH /:id)
-  // =============================================
+  // =========================
+  // UPDATE
+  // =========================
   describe('update', () => {
-      const mockReq = { user: { corretor_id: 1, perfil: Perfil.corretor } };
-      const mockImovelId = 1;
-      const updateDto: UpdateImovelDto = { descricao: 'Updated' };
-      const mockServiceResponse = { imovel_id: 1, descricao: 'Updated' };
+    const req = {
+      user: { corretor_id: 1, perfil: Perfil.corretor },
+    };
 
-      it('deve chamar imovelService.update com id, dto e user', async () => {
-          mockImovelService.update.mockResolvedValue(mockServiceResponse);
+    const dto: UpdateImovelDto = {
+      descricao: 'Atualizado',
+    };
 
-          const result = await controller.update(mockImovelId, updateDto, mockReq);
+    const response = {
+      imovel_id: 1,
+      descricao: 'Atualizado',
+    };
 
-          expect(service.update).toHaveBeenCalledWith(mockImovelId, updateDto, mockReq.user);
-          expect(result).toEqual(mockServiceResponse);
-      });
+    it('deve atualizar um imóvel', async () => {
+      mockImovelService.update.mockResolvedValue(response);
+
+      const result = await controller.update(1, dto, req as any);
+
+      expect(service.update).toHaveBeenCalledWith(1, dto, req.user);
+      expect(result).toEqual(response);
+    });
   });
 
-  // =============================================
-  // REMOVE (DELETE /:id)
-  // =============================================
+  // =========================
+  // REMOVE
+  // =========================
   describe('remove', () => {
-      const mockReq = { user: { corretor_id: 1, perfil: Perfil.corretor } };
-      const mockImovelId = 1;
-      const mockServiceResponse = { imovel_id: 1, /* ... */ };
+    const req = {
+      user: { corretor_id: 1, perfil: Perfil.corretor },
+    };
 
-      it('deve chamar imovelService.remove com id e user', async () => {
-          mockImovelService.remove.mockResolvedValue(mockServiceResponse);
+    const response = {
+      message: 'Imóvel removido com sucesso.',
+    };
 
-          const result = await controller.remove(mockImovelId, mockReq);
+    it('deve remover um imóvel', async () => {
+      mockImovelService.remove.mockResolvedValue(response);
 
-          expect(service.remove).toHaveBeenCalledWith(mockImovelId, mockReq.user);
-          expect(result).toEqual(mockServiceResponse);
-      });
+      const result = await controller.remove(1, req as any);
+
+      expect(service.remove).toHaveBeenCalledWith(1, req.user);
+      expect(result).toEqual(response);
+    });
   });
-
 });

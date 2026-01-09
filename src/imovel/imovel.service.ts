@@ -5,7 +5,6 @@ import {
   ConflictException,
   forwardRef,
   Inject,
-  UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -14,12 +13,13 @@ import { UpdateImovelDto } from './dto/update-imovel.dto';
 import { Imovel, Perfil, Disponibilidade } from '@prisma/client';
 import { TransacoesService } from '../transacoes/transacoes.service';
 import { AgendamentosService } from '../agendamentos/agendamentos.service';
-import { Prisma } from '@prisma/client';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class ImovelService {
   constructor(
     private prisma: PrismaService,
+    private cloudinaryService: CloudinaryService,
     @Inject(forwardRef(() => TransacoesService))
     private transacaoService: TransacoesService,
     private agendamentoService: AgendamentosService,
@@ -27,6 +27,7 @@ export class ImovelService {
 
   async create(createImovelDto: CreateImovelDto, user: any): Promise<Imovel> {
     const { rua, numero, complemento, cidade, estado } = createImovelDto;
+
     const existingAddress = await this.prisma.imovel.findFirst({
       where: { rua, numero, complemento, cidade, estado },
     });
@@ -60,11 +61,11 @@ export class ImovelService {
       valorAluguelMin,
       valorAluguelMax,
     } = queryParams;
-    const skip = (page - 1) * limit;
 
+    const skip = (page - 1) * limit;
     const where: any = {};
 
-    if (user && user.perfil === Perfil.corretor) {
+    if (user?.perfil === Perfil.corretor) {
       where.corretor_id = user.corretor_id;
     }
 
@@ -102,33 +103,22 @@ export class ImovelService {
       this.prisma.imovel.count({ where }),
     ]);
 
-    const imoveisFormatados = imoveis.map(({ imagens, ...resto }) => ({
-      ...resto,
-      imagens,
-    }));
-
     return {
-      data: imoveisFormatados,
+      data: imoveis,
       total,
       page: Number(page),
       lastPage: Math.ceil(total / Number(limit)),
     };
   }
 
-  async findOne(id: number, user: any): Promise<any> {
+  async findOne(id: number, user: any) {
     const imovel = await this.prisma.imovel.findUnique({
       where: { imovel_id: id },
-      include: {
-        imagens: true,
-      },
+      include: { imagens: true },
     });
 
     if (!imovel) {
       throw new NotFoundException(`Imóvel com ID ${id} não encontrado.`);
-    }
-
-    if (!user) {
-      throw new ForbiddenException('Acesso negado. Autenticação necessária.');
     }
 
     if (
@@ -140,8 +130,7 @@ export class ImovelService {
       );
     }
 
-    const { imagens, ...restoDoImovel } = imovel;
-    return { ...restoDoImovel, imagens };
+    return imovel;
   }
 
   async update(
@@ -166,7 +155,7 @@ export class ImovelService {
 
     if (transacoes) {
       throw new ConflictException(
-        'Este imóvel não pode ser excluído pois possui um histórico de vendas ou aluguéis.',
+        'Este imóvel não pode ser excluído pois possui histórico.',
       );
     }
 
@@ -181,31 +170,35 @@ export class ImovelService {
 
   async uploadImagens(
     id: number,
-    files: Array<Express.Multer.File>,
+    files: Express.Multer.File[],
     user: any,
   ) {
-    if (!files || files.length === 0) {
-      throw new BadRequestException('Nenhum arquivo enviado.');
+    if (!files?.length) {
+      throw new BadRequestException('Nenhuma imagem enviada.');
     }
 
     await this.findOne(id, user);
 
-    const urlsSalvas = files.map((file) => {
-      const urlSimulada = `uploads/imoveis/${id}/${Date.now()}-${file.originalname}`;
-      return urlSimulada;
-    });
+    const imagens = await Promise.all(
+      files.map(async (file) => {
+        const result = await this.cloudinaryService.uploadImage(file);
 
-    const dadosImagens = urlsSalvas.map((url) => {
-      return {
-        url: url,
-        imovel_id: id,
-      };
-    });
+        return {
+          imovel_id: id,
+          url: result.secure_url,
+        };
+      }),
+    );
 
     await this.prisma.imagemImovel.createMany({
-      data: dadosImagens,
+      data: imagens,
     });
 
-    return { message: `${files.length} imagens salvas com sucesso.` };
+    return {
+      success: true,
+      message: 'The property images were successfully stored.',
+      total: imagens.length,
+      data: imagens,
+    };
   }
 }

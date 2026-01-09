@@ -1,12 +1,18 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ImovelService } from './imovel.service';
 import { ImovelController } from './imovel.controller';
-import { PrismaModule } from 'src/prisma/prisma.module';
-import { TransacoesModule } from 'src/transacoes/transacoes.module';
-import { AgendamentosModule } from 'src/agendamentos/agendamentos.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { TransacoesModule } from '../transacoes/transacoes.module';
+import { AgendamentosModule } from '../agendamentos/agendamentos.module';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => TransacoesModule), AgendamentosModule],
+  imports: [
+    PrismaModule, 
+    forwardRef(() => TransacoesModule), 
+    AgendamentosModule,
+    CloudinaryModule 
+  ],
   controllers: [ImovelController],
   providers: [ImovelService],
   exports: [ImovelService],

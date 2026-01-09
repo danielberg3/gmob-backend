@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCorretorDto } from './dto/create-corretor.dto';
 import { UpdateCorretorDto } from './dto/update-corretor.dto';
@@ -11,7 +16,9 @@ export class CorretorService {
   async create(createCorretorDto: CreateCorretorDto, currentUser: any) {
     // Apenas administradores podem criar outros corretores
     if (currentUser.perfil !== 'administrador') {
-      throw new ForbiddenException('Apenas administradores podem criar corretores');
+      throw new ForbiddenException(
+        'Apenas administradores podem criar corretores',
+      );
     }
 
     const { email, cpf, senha, ...userData } = createCorretorDto;
@@ -59,10 +66,17 @@ export class CorretorService {
     return corretor;
   }
 
-  async findAll(currentUser: any, page: number = 1, limit: number = 10) {
+  async findAll(
+    currentUser: any,
+    page: number = 1,
+    limit: number = 10,
+    test: number = 10,
+  ) {
     // Apenas administradores podem listar todos os corretores
     if (currentUser.perfil !== 'administrador') {
-      throw new ForbiddenException('Apenas administradores podem listar corretores');
+      throw new ForbiddenException(
+        'Apenas administradores podem listar corretores',
+      );
     }
 
     const skip = (page - 1) * limit;
@@ -100,8 +114,13 @@ export class CorretorService {
 
   async findOne(id: number, currentUser: any) {
     // Corretores podem ver apenas seu próprio perfil, administradores podem ver qualquer um
-    if (currentUser.perfil !== 'administrador' && currentUser.corretor_id !== id) {
-      throw new ForbiddenException('Você só pode visualizar seu próprio perfil');
+    if (
+      currentUser.perfil !== 'administrador' &&
+      currentUser.corretor_id !== id
+    ) {
+      throw new ForbiddenException(
+        'Você só pode visualizar seu próprio perfil',
+      );
     }
 
     const corretor = await this.prismaService.corretor.findUnique({
@@ -124,9 +143,16 @@ export class CorretorService {
     return corretor;
   }
 
-  async update(id: number, updateCorretorDto: UpdateCorretorDto, currentUser: any) {
+  async update(
+    id: number,
+    updateCorretorDto: UpdateCorretorDto,
+    currentUser: any,
+  ) {
     // Corretores podem atualizar apenas seu próprio perfil, administradores podem atualizar qualquer um
-    if (currentUser.perfil !== 'administrador' && currentUser.corretor_id !== id) {
+    if (
+      currentUser.perfil !== 'administrador' &&
+      currentUser.corretor_id !== id
+    ) {
       throw new ForbiddenException('Você só pode atualizar seu próprio perfil');
     }
 
@@ -165,10 +191,10 @@ export class CorretorService {
 
     // Prepara dados para atualização
     const updateData: any = { ...userData };
-    
+
     if (email) updateData.email = email;
     if (cpf) updateData.cpf = cpf;
-    
+
     // Hash da nova senha se fornecida
     if (senha) {
       updateData.senha = await bcrypt.hash(senha, 12);
@@ -195,7 +221,9 @@ export class CorretorService {
   async remove(id: number, currentUser: any) {
     // Apenas administradores podem remover corretores
     if (currentUser.perfil !== 'administrador') {
-      throw new ForbiddenException('Apenas administradores podem remover corretores');
+      throw new ForbiddenException(
+        'Apenas administradores podem remover corretores',
+      );
     }
 
     // Verifica se o corretor existe
@@ -221,4 +249,3 @@ export class CorretorService {
     };
   }
 }
-

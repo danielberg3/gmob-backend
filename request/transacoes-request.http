@@ -21,9 +21,9 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "imovel_id": 4,
+  "imovel_id": 1,
   "cpf": "111.222.333-44",
-  "tipo_transacao": "venda"
+  "tipo_transacao": "aluguel"
 }
 
 ### 3. Listar transações

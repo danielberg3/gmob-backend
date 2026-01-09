@@ -43,7 +43,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "tipo_imovel_id": 1,
+  "tipo_imovel_id": 4,
   "disponibilidade": "ambos",
   "valor": 950000.00,
   "valor_aluguel": 4500.00,
